@@ -1,37 +1,17 @@
-import sys
+from VideoThread import VideoThread
+
+import Constants
 import cv2
 import numpy as np
 from PyQt6.QtWidgets import (
-    QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, 
+    QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, 
     QGroupBox, QComboBox, QCheckBox, QStatusBar, QFileDialog, QSpinBox, QMessageBox
 )
-from PyQt6.QtCore import Qt, pyqtSignal as Signal, pyqtSlot as Slot, QThread
+from PyQt6.QtCore import Qt, pyqtSlot as Slot
 from PyQt6.QtGui import QImage, QPixmap
-import mediapipe as mp
 import csv
-import time
 import os
-import queue
-import tensorflow as tf
 from datetime import datetime
-
-# Optimize TensorFlow for M1
-os.environ['TF_ENABLE_ONEDNN_OPTS'] = '1'  # Enable oneDNN optimizations
-os.environ['TF_METAL_ENABLED'] = '1'      # Enable Metal GPU acceleration
-
-# Verify TensorFlow and GPU support
-print(f"TensorFlow version: {tf.__version__}")
-print("GPU available:", tf.config.list_physical_devices('GPU'))
-
-# Constants
-CAPTURE_FPS = 60  # Camera capture rate
-DEFAULT_VIDEO_FPS = 25  # Default video recording FPS
-TEXTURE_WIDTH = 1280
-TEXTURE_HEIGHT = 720
-VIDEO_CODEC = 'mp4v'
-VIDEO_FORMAT = '.mp4'
-BUFFER_SIZE = 30  # Frame buffer size
-CSV_BUFFER_SIZE = 100  # CSV data buffer size
 
 
 def get_available_cameras():
@@ -43,140 +23,6 @@ def get_available_cameras():
             camera_list.append(f"Camera {i}")
             cap.release()
     return camera_list
-
-
-class VideoThread(QThread):
-    """Thread for video capture and landmark processing."""
-    frame_ready = Signal(np.ndarray)
-    fps_updated = Signal(float)
-    landmarks_ready = Signal(list)
-
-    def __init__(self, camera_index=0):
-        super().__init__()
-        self.camera_index = camera_index
-        self.running = False
-        self.recording = False
-        self.show_landmarks = True  # Toggle landmark visibility
-        self.mp_holistic = mp.solutions.holistic
-        self.mp_drawing = mp.solutions.drawing_utils
-        self.frame_queue = queue.Queue(maxsize=BUFFER_SIZE)
-        self.csv_queue = queue.Queue(maxsize=CSV_BUFFER_SIZE)
-        self.drawing_spec = self.mp_drawing.DrawingSpec(thickness=2, circle_radius=1)
-        self.model_complexity = 0  # Default model complexity
-
-    def set_model_complexity(self, complexity):
-        """Set the model complexity level."""
-        self.model_complexity = complexity
-
-    def run(self):
-        """Main capture and processing loop."""
-        cap = cv2.VideoCapture(self.camera_index)
-        if not cap.isOpened():
-            self.running = False
-            self.frame_ready.emit(np.zeros((TEXTURE_HEIGHT, TEXTURE_WIDTH, 3), dtype=np.uint8))
-            self.fps_updated.emit(0.0)
-            return
-
-        cap.set(cv2.CAP_PROP_FRAME_WIDTH, TEXTURE_WIDTH)
-        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, TEXTURE_HEIGHT)
-        cap.set(cv2.CAP_PROP_FPS, CAPTURE_FPS)
-
-        start_time = time.time()
-        frames_processed = 0
-
-        with self.mp_holistic.Holistic(
-            min_detection_confidence=0.5,
-            min_tracking_confidence=0.5,
-            model_complexity=self.model_complexity,  # Use the selected model complexity
-            enable_segmentation=False,
-            enable_tracking=False
-        ) as holistic:
-            self.running = True
-            while self.running:
-                ret, frame = cap.read()
-                if not ret:
-                    break
-
-                # Process frame with MediaPipe
-                image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                results = holistic.process(image)
-
-                # Draw landmarks if enabled
-                display_frame = frame.copy()
-                if self.show_landmarks:
-                    self.draw_landmarks(display_frame, results)
-
-                # Process landmarks if recording
-                if self.recording and (results.pose_landmarks or results.left_hand_landmarks or results.right_hand_landmarks):
-                    landmarks = self.process_landmarks(results, time.time())
-                    self.landmarks_ready.emit(landmarks)
-
-                # Calculate FPS
-                frames_processed += 1
-                elapsed_time = time.time() - start_time
-                fps = frames_processed / elapsed_time
-
-                # Emit signals
-                self.frame_ready.emit(display_frame)
-                self.fps_updated.emit(fps)
-
-                # Save frame if needed
-                try:
-                    self.frame_queue.put(display_frame, block=False)
-                except queue.Full:
-                    continue
-
-        cap.release()
-
-    def draw_landmarks(self, image, results):
-        """Draw detected landmarks on the image."""
-        if results.pose_landmarks:
-            self.mp_drawing.draw_landmarks(
-                image,
-                results.pose_landmarks,
-                self.mp_holistic.POSE_CONNECTIONS,
-                landmark_drawing_spec=self.drawing_spec
-            )
-        if results.left_hand_landmarks:
-            self.mp_drawing.draw_landmarks(
-                image,
-                results.left_hand_landmarks,
-                self.mp_holistic.HAND_CONNECTIONS,
-                landmark_drawing_spec=self.drawing_spec
-            )
-        if results.right_hand_landmarks:
-            self.mp_drawing.draw_landmarks(
-                image,
-                results.right_hand_landmarks,
-                self.mp_holistic.HAND_CONNECTIONS,
-                landmark_drawing_spec=self.drawing_spec
-            )
-
-    def process_landmarks(self, results, timestamp):
-        """Process and format landmark data."""
-        landmarks = [timestamp]  # Include only timestamp
-
-        # Process pose landmarks
-        if results.pose_landmarks:
-            for landmark in results.pose_landmarks.landmark:
-                landmarks.extend([landmark.x, landmark.y, landmark.z, landmark.visibility])
-        else:
-            landmarks.extend([0] * (33 * 4))
-
-        # Process hand landmarks
-        for hand_landmarks in [results.left_hand_landmarks, results.right_hand_landmarks]:
-            if hand_landmarks:
-                for landmark in hand_landmarks.landmark:
-                    landmarks.extend([landmark.x, landmark.y, landmark.z])
-            else:
-                landmarks.extend([0] * (21 * 3))
-
-        return landmarks
-
-    def stop(self):
-        """Stop the video thread."""
-        self.running = False
-        self.wait()
 
 class MotionCaptureWindow(QMainWindow):
     """Main application window for motion capture."""
@@ -199,7 +45,7 @@ class MotionCaptureWindow(QMainWindow):
         video_layout.setContentsMargins(1, 1, 1, 1)
         video_layout.setSpacing(0)
         self.video_label = QLabel()
-        self.video_label.setFixedSize(TEXTURE_WIDTH, TEXTURE_HEIGHT)
+        self.video_label.setFixedSize(Constants.TEXTURE_WIDTH, Constants.TEXTURE_HEIGHT)
         self.video_label.setStyleSheet("QLabel { background-color: black; }")
         video_layout.addWidget(self.video_label, alignment=Qt.AlignmentFlag.AlignCenter)
         video_group.setLayout(video_layout)
@@ -264,7 +110,7 @@ class MotionCaptureWindow(QMainWindow):
         self.fps_spinbox = QSpinBox()
         self.fps_spinbox.setFixedHeight(20)
         self.fps_spinbox.setRange(1, 60)
-        self.fps_spinbox.setValue(DEFAULT_VIDEO_FPS)
+        self.fps_spinbox.setValue(Constants.DEFAULT_VIDEO_FPS)
         fps_layout.addWidget(fps_label)
         fps_layout.addWidget(self.fps_spinbox)
         capture_layout.addLayout(fps_layout)
@@ -332,7 +178,7 @@ class MotionCaptureWindow(QMainWindow):
         self.generate_filename()
 
         # Set window size and show
-        self.resize(TEXTURE_WIDTH + 20, TEXTURE_HEIGHT + 70)
+        self.resize(Constants.TEXTURE_WIDTH + 20, Constants.TEXTURE_HEIGHT + 70)
         self.show()
 
     def update_model_complexity(self, index):
@@ -398,13 +244,13 @@ class MotionCaptureWindow(QMainWindow):
 
             # Initialize video writer if needed
             if self.save_video_cb.isChecked():
-                video_path = self.filename.replace('.csv', VIDEO_FORMAT)
-                fourcc = cv2.VideoWriter_fourcc(*VIDEO_CODEC)
+                video_path = self.filename.replace('.csv', Constants.VIDEO_FORMAT)
+                fourcc = cv2.VideoWriter_fourcc(*Constants.VIDEO_CODEC)
                 self.video_writer = cv2.VideoWriter(
                     video_path,
                     fourcc,
                     float(self.fps_spinbox.value()),
-                    (TEXTURE_WIDTH, TEXTURE_HEIGHT)
+                    (Constants.TEXTURE_WIDTH, Constants.TEXTURE_HEIGHT)
                 )
             
             # Reset the first timestamp
@@ -492,25 +338,3 @@ class MotionCaptureWindow(QMainWindow):
         self.stop_capture()
         event.accept()
 
-
-def main():
-    """Main function to start the application."""
-    # Configure high DPI settings
-    if hasattr(Qt, 'HighDpiScaleFactorRoundingPolicy'):
-        QApplication.setHighDpiScaleFactorRoundingPolicy(
-            Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
-
-    app = QApplication(sys.argv)
-
-    if hasattr(app, 'setDesktopFileName'):
-        app.setDesktopFileName("motion_capture")
-
-    # Set fusion style for better look
-    app.setStyle('Fusion')
-
-    window = MotionCaptureWindow()
-    sys.exit(app.exec())
-
-
-if __name__ == "__main__":
-    main()
