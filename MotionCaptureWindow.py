@@ -27,9 +27,9 @@ def get_available_cameras():
 class MotionCaptureWindow(QMainWindow):
     """Main application window for motion capture."""
 
-    def __init__(self):
+    def __init__(self, title):
         super().__init__()
-        self.setWindowTitle("Motion Capture System")
+        self.setWindowTitle(title)
         self.first_timestamp = None
 
         # Create main widget and layout
