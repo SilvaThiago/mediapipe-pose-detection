@@ -1,5 +1,6 @@
 from MotionCaptureWindow import MotionCaptureWindow
 from ExperimentWindow import ExperimentWindow
+from WorkerThread import WorkerThread
 
 import Constants
 import cv2
@@ -143,6 +144,9 @@ class MainWindow(QMainWindow):
         self.csv_writer = None
         self.video_writer = None
         self.currentExperimentList = None
+        
+        # Criação de threads para abrir janelas
+        self.threads = []
 
         # # Create video thread
         # self.thread = VideoThread()
@@ -153,6 +157,7 @@ class MainWindow(QMainWindow):
         # # Connect signals
         self.select_file_btn.clicked.connect(self.select_file)
         self.add_window_btn.clicked.connect(self.add_window)
+        self.start_btn.clicked.connect(self.start_experiment)
         # self.start_btn.clicked.connect(self.start_capture)
         # self.stop_btn.clicked.connect(self.stop_capture)
         # self.close_btn.clicked.connect(self.close)
@@ -221,6 +226,32 @@ class MainWindow(QMainWindow):
                     return False
         return True
 
+    def start_experiment(self):
+        """Start the experiment by opening all ExperimentWindow objects."""
+
+        windows = []  # List to keep track of opened windows
+                              
+        # Função para criar uma janela
+        def create_window(title):
+            window = MotionCaptureWindow(title)
+            window.show()
+            windows.append(window)  # Armazena a referência para evitar garbage collection
+
+        
+        if self.currentExperimentList is not None:
+            for experiment in self.currentExperimentList: 
+                thread = WorkerThread(f"Window {len(windows) + 1}")
+                thread.create_window_signal.connect(create_window)
+                self.threads.append(thread)
+                thread.start() 
+        else:
+            QMessageBox.warning(self, "Warning", "No experiment windows to start.")
+            self.start_btn.setEnabled(False)
+            return
+        
+
+
+        
 
 
     def generate_filename(self):

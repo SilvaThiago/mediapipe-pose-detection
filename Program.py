@@ -1,4 +1,3 @@
-from MotionCaptureWindow import MotionCaptureWindow
 from MainWindow import MainWindow
 
 import sys
@@ -15,19 +14,6 @@ os.environ['TF_METAL_ENABLED'] = '1'      # Enable Metal GPU acceleration
 # Verify TensorFlow and GPU support
 print(f"TensorFlow version: {tf.__version__}")
 print("GPU available:", tf.config.list_physical_devices('GPU'))
-
-
-class WorkerThread(QThread):
-    # Sinal para solicitar a criação de uma janela
-    create_window_signal = pyqtSignal(str)
-
-    def __init__(self, window_name):
-        super().__init__()
-        self.window_name = window_name
-
-    def run(self):
-        # Emite o sinal para criar a janela
-        self.create_window_signal.emit(self.window_name)
 
 
 def main():
