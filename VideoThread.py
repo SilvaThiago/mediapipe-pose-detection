@@ -98,20 +98,20 @@ class VideoThread(QThread):
                 self.mp_holistic.POSE_CONNECTIONS,
                 landmark_drawing_spec=self.drawing_spec
             )
-        if results.left_hand_landmarks:
-            self.mp_drawing.draw_landmarks(
-                image,
-                results.left_hand_landmarks,
-                self.mp_holistic.HAND_CONNECTIONS,
-                landmark_drawing_spec=self.drawing_spec
-            )
-        if results.right_hand_landmarks:
-            self.mp_drawing.draw_landmarks(
-                image,
-                results.right_hand_landmarks,
-                self.mp_holistic.HAND_CONNECTIONS,
-                landmark_drawing_spec=self.drawing_spec
-            )
+        # if results.left_hand_landmarks:
+        #     self.mp_drawing.draw_landmarks(
+        #         image,
+        #         results.left_hand_landmarks,
+        #         self.mp_holistic.HAND_CONNECTIONS,
+        #         landmark_drawing_spec=self.drawing_spec
+        #     )
+        # if results.right_hand_landmarks:
+        #     self.mp_drawing.draw_landmarks(
+        #         image,
+        #         results.right_hand_landmarks,
+        #         self.mp_holistic.HAND_CONNECTIONS,
+        #         landmark_drawing_spec=self.drawing_spec
+        #     )
 
     def process_landmarks(self, results, timestamp):
         """Process and format landmark data."""
@@ -124,13 +124,13 @@ class VideoThread(QThread):
         else:
             landmarks.extend([0] * (33 * 4))
 
-        # Process hand landmarks
-        for hand_landmarks in [results.left_hand_landmarks, results.right_hand_landmarks]:
-            if hand_landmarks:
-                for landmark in hand_landmarks.landmark:
-                    landmarks.extend([landmark.x, landmark.y, landmark.z])
-            else:
-                landmarks.extend([0] * (21 * 3))
+        # # Process hand landmarks
+        # for hand_landmarks in [results.left_hand_landmarks, results.right_hand_landmarks]:
+        #     if hand_landmarks:
+        #         for landmark in hand_landmarks.landmark:
+        #             landmarks.extend([landmark.x, landmark.y, landmark.z])
+        #     else:
+        #         landmarks.extend([0] * (21 * 3))
 
         return landmarks
 

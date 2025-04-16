@@ -1,10 +1,11 @@
-from MotionCaptureWindow import MotionCaptureWindow
+from MainWindow import MainWindow
 
 import sys
-from PyQt6.QtWidgets import (QApplication)
-from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import QApplication, QMainWindow, QLabel
+from PyQt6.QtCore import Qt, QThread, pyqtSignal
 import os
 import tensorflow as tf
+
 
 # Optimize TensorFlow for M1
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '1'  # Enable oneDNN optimizations
@@ -13,6 +14,7 @@ os.environ['TF_METAL_ENABLED'] = '1'      # Enable Metal GPU acceleration
 # Verify TensorFlow and GPU support
 print(f"TensorFlow version: {tf.__version__}")
 print("GPU available:", tf.config.list_physical_devices('GPU'))
+
 
 def main():
     """Main function to start the application."""
@@ -28,8 +30,10 @@ def main():
 
     # Set fusion style for better look
     app.setStyle('Fusion')
+    
+    print("Open MainWindow")
+    window = MainWindow();
 
-    window = MotionCaptureWindow()
     sys.exit(app.exec())
 
 
