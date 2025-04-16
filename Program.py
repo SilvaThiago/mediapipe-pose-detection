@@ -30,24 +30,9 @@ def main():
 
     # Set fusion style for better look
     app.setStyle('Fusion')
-
-    window = MainWindow();
     
-    # # Função para criar uma janela
-    # def create_window(title):
-    #     window = MotionCaptureWindow(title)
-    #     window.show()
-    #     windows.append(window)  # Armazena a referência para evitar garbage collection
-
-    # windows = []  # Lista para manter as janelas abertas
-
-    # # Criação de threads para abrir janelas
-    # threads = []
-    # for i in range(2):
-    #     thread = WorkerThread(f"Window {i + 1}")
-    #     thread.create_window_signal.connect(create_window)
-    #     threads.append(thread)
-    #     thread.start()
+    print("Open MainWindow")
+    window = MainWindow();
 
     sys.exit(app.exec())
 

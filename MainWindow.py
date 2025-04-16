@@ -214,6 +214,7 @@ class MainWindow(QMainWindow):
         experiment_info = f"[{len(self.currentExperimentList)}] {experimentWindow.chosenCamera}, File: {experimentWindow.resultFilePath}, Preview: {experimentWindow.showPreview}"
         experiment_label = QLabel(experiment_info)
         experiment_label.setFixedHeight(20)
+        print(f"Added: {experiment_info}")
 
         # Add the QLabel to the experimentResources_group layout
         self.open_experiment_btn.setEnabled(True)
@@ -250,6 +251,7 @@ class MainWindow(QMainWindow):
                 thread = WorkerThread(experiment)
                 thread.create_window_signal.connect(create_window)
                 self.threads.append(thread)
+                print(f"Create window starting thread {thread.experiment.chosenCamera}")
                 thread.start() 
             self.open_experiment_btn.setEnabled(False)
             self.start_btn.setEnabled(True)
