@@ -16,14 +16,14 @@ class AngleExtensions:
         """
         # Calculate the vectors
         vector_a = (
-            point1[0] - point2[0],
-            point1[1] - point2[1],
-            point1[2] - point2[2]
+            point1.x - point2.x,
+            point1.y - point2.y,
+            point1.z - point2.z
         )
         vector_b = (
-            point3[0] - point2[0],
-            point3[1] - point2[1],
-            point3[2] - point2[2]
+            point3.x - point2.x,
+            point3.y - point2.y,
+            point3.z - point2.z
         )
         
         return AngleExtensions._calculate_angle_between_vectors(vector_a, vector_b)
@@ -42,14 +42,14 @@ class AngleExtensions:
         """
         # Calculate the direction vectors of the lines
         vector_a = (
-            line1[1][0] - line1[0][0],
-            line1[1][1] - line1[0][1],
-            line1[1][2] - line1[0][2]
+            line1[1].x - line1[0].x,
+            line1[1].y - line1[0].y,
+            line1[1].z - line1[0].z
         )
         vector_b = (
-            line2[1][0] - line2[0][0],
-            line2[1][1] - line2[0][1],
-            line2[1][2] - line2[0][2]
+            line2[1].x - line2[0].x,
+            line2[1].y - line2[0].y,
+            line2[1].z - line2[0].z
         )
         
         return AngleExtensions._calculate_angle_between_vectors(vector_a, vector_b)
