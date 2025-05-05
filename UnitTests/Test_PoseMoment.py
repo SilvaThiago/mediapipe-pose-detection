@@ -25,8 +25,18 @@ class Test_PoseMoment(unittest.TestCase):
             ('points', 'right_elbow', 11, 13, 15), # right elbow
         ]
         expected_angles = {
-            "shoulder_angle": 45.0,
-            "elbow_angle": 90.0
+            'left_ankle': 93.79805227158938,
+            'left_elbow': 80.11651387332616,
+            'left_hip': 160.9022598376762,
+            'left_horizontal_shoulder': 87.14506015931514,
+            'left_knee': 155.81361892399372,
+            'left_vertical_shoulder': 41.96020532520427,
+            'right_ankle': 113.97865785680341,
+            'right_elbow': 143.65851291510467,
+            'right_hip': 142.45013772882442,
+            'right_horizontal_shoulde': 38.84203072626269,
+            'right_knee': 165.75999160341775,
+            'right_vertical_shoulder': 65.03988727437296
         }
 
         # Act
