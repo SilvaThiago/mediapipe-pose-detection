@@ -190,8 +190,8 @@ class MainWindow(QMainWindow):
         textureWidth = Constants.TEXTURE_WIDTH
         textureHeight = Constants.TEXTURE_HEIGHT
         if not self.showPreview_cb.isChecked():
-            textureWidth = 500
-            textureHeight = 250
+            textureWidth = 200
+            textureHeight = 20
 
         experimentWindow = ExperimentWindow(self.camera_combo.currentText(), 
                                             self.camera_combo.currentIndex(), 
