@@ -21,6 +21,7 @@ class PoseMoment:
                     line1_point2 = self.pose_points[angle[2][1]]
                     line2_point1 = self.pose_points[angle[3][0]]
                     line2_point2 = self.pose_points[angle[3][1]]
+
                     currentAngle = AngleExtensions.CalculateByLines((line1_point1, line1_point2), (line2_point1, line2_point2))
                     self.pose_degrees[angle[1]] = currentAngle
                     pass
@@ -28,6 +29,6 @@ class PoseMoment:
                     currentAngle = AngleExtensions.CalculateByPoints(self.pose_points[angle[2]], self.pose_points[angle[3]], self.pose_points[angle[4]])
                     self.pose_degrees[angle[1]] = currentAngle
                     pass
-            pass
+            # return True
         else:
-            raise ValueError("anglesToCalculate cannot be None")    
+            raise ValueError("anglesToCalculate cannot be None")  

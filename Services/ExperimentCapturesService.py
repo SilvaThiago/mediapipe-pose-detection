@@ -23,6 +23,7 @@ class ExperimentCapturesService:
     def ProcessAllCsvFromFolder(self, folder_path):
         for file_name in os.listdir(folder_path):
             if file_name.endswith(".csv"):
+                print(file_name)
                 file_path = os.path.join(folder_path, file_name)
                 self.poses_service = PosesService(file_path)
                 self.poses_service.load_poses_from_csv()
