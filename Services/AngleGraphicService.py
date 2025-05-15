@@ -1,5 +1,7 @@
 from datetime import datetime
 import os
+
+import cv2
 from Services.CsvFileService import CsvFileService
 
 import matplotlib.pyplot as plt
@@ -108,3 +110,27 @@ class AngleGraphicService:
             os.makedirs(os.path.dirname(output_path))
         plt.savefig(output_path)
         plt.close()
+        
+    @staticmethod
+    def save_screenshot_from_video(video_path, seconds, output_path):
+
+        cap = cv2.VideoCapture(video_path)
+        if not cap.isOpened():
+            raise IOError(f"Cannot open video file: {video_path}")
+
+        fps = cap.get(cv2.CAP_PROP_FPS)
+        # Se seconds for uma tupla (segundos, milissegundos), converte para float
+        if isinstance(seconds, tuple):
+            sec = float(str(seconds[0]) + '.' + str(seconds[1]))
+        else:
+            sec = float(seconds)
+        frame_number = int(fps * sec)
+        cap.set(cv2.CAP_PROP_POS_FRAMES, frame_number)
+        ret, frame = cap.read()
+        if not ret:
+            cap.release()
+            raise ValueError(f"Could not read frame at {sec} seconds in {video_path}")
+
+        cv2.imwrite(output_path, frame)
+        cap.release()
+        pass

@@ -65,5 +65,18 @@ class TestAngleGraphicService(unittest.TestCase):
         # Assert
         self.assertTrue(self.service.cameras)
 
+    def test_save_screenshot_from_video(self):
+        # Supondo que AngleGraphicService tenha um método save_screenshot_from_video(video_path, seconds, output_path)
+        video_path = os.path.join(os.path.dirname(__file__), '..', 'Resources', 'VideoScreenshot_Experiment', 'motion_capture_Camera 1_20250417_113904.mp4')
+        seconds = 15,198423
+        output_path = os.path.join(os.path.dirname(__file__), '..', 'Resources', 'VideoScreenshot_Experiment', 'results', 'Camera 1.png')
+        if os.path.exists(video_path):
+            AngleGraphicService.save_screenshot_from_video(video_path, seconds, output_path)
+            self.assertTrue(os.path.exists(output_path))
+        else:
+            self.skipTest(f"Video file {video_path} does not exist.")
+
+
+
 if __name__ == '__main__':
     unittest.main()
