@@ -11,20 +11,57 @@ class AngleGraphicService:
         self.csv_folder_path = csv_folder_path
         self.angle_to_compare = angle_to_compare
         self.csv_service = []
+        self.camera_name = {
+            "Camera 0": "90º Camera",
+            "Camera 1": "0º Camera",
+            "Camera 2": "45º Camera",
+        }
+        self.experiment_name = {
+            "Bia_Agachamento": "Female Volunteer 1 Squat",
+            "Bia_Empurrada": "Female Volunteer 1 Push",
+            "Bia_Empurrada_Elastico": "Female Volunteer 1 Push with Elastic Band",
+            "Bia_Puxada": "Female Volunteer 1 Pull",
+            "Bia_Puxada_Elastico": "Female Volunteer 1 Pull with Elastic Band",
+            "Stefanie_Agachamento": "Female Volunteer 2 Squat",
+            "Stefanie_Empurrada": "Female Volunteer 2 Push",
+            "Stefanie_Empurrada_Elastico": "Female Volunteer 2 Push with Elastic Band",
+            "Stefanie_Puxada": "Female Volunteer 2 Pull",
+            "Stefanie_Puxada_Elastico": "Female Volunteer 2 Pull with Elastic Band",
+            "Thauanne_Agachamento": "Female Volunteer 3 Squat",
+            "Thauanne_Empurrada": "Female Volunteer 3 Push",
+            "Thauanne_Empurrada_Elastico": "Female Volunteer 3 Push with Elastic Band",
+            "Thauanne_Puxada": "Female Volunteer 3 Pull",
+            "Thauanne_Puxada_Elastico": "Female Volunteer 3 Pull with Elastic Band",
+            "Nilson_Agachamento": "Male Volunteer 1 Squat",
+            "Nilson_Empurrada": "Male Volunteer 1 Push",
+            "Nilson_Empurrada_Elastico": "Male Volunteer 1 Push with Elastic Band",
+            "Nilson_Puxada": "Male Volunteer 1 Pull",
+            "Nilson_Puxada_Elastico": "Male Volunteer 1 Pull with Elastic Band",
+            "Paulo_Agachamento": "Male Volunteer 2 Squat",
+            "Paulo_Empurrada": "Male Volunteer 2 Push",
+            "Paulo_Empurrada_Elastico": "Male Volunteer 2 Push with Elastic Band",
+            "Paulo_Puxada": "Male Volunteer 2 Pull",
+            "Paulo_Puxada_Elastico": "Male Volunteer 2 Pull with Elastic Band",
+            "Thiago_Agachamento": "Male Volunteer 3 Squat",
+            "Thiago_Empurrada": "Male Volunteer 3 Push",
+            "Thiago_Empurrada_Elastico": "Male Volunteer 3 Push with Elastic Band",
+            "Thiago_Puxada": "Male Volunteer 3 Pull",
+            "Thiago_Puxada_Elastico": "Male Volunteer 3 Pull with Elastic Band",
+        }
         print(f"Starting processing for: {self.experiment_string} - {self.angle_to_compare}")
 
     def load_data(self):
         """
-        Carrega os dados dos arquivos CSV no caminho especificado, filtrando pelas colunas de ângulo especificadas.
+        Load data from CSV file on specified, filtering by column of specified angle.
         """
         
         print(f"Loading data from: {self.csv_folder_path}")
         if not os.path.exists(self.csv_folder_path):
-            raise FileNotFoundError(f"O caminho {self.csv_folder_path} não existe.")
+            raise FileNotFoundError(f"The path {self.csv_folder_path} does not exist.")
 
         self.cameras = []
         for file_name in os.listdir(self.csv_folder_path):
-            if self.experiment_string in file_name and file_name.endswith(".csv"):
+            if self.experiment_string == file_name.split('_Camera')[0] and file_name.endswith(".csv"):
                 file_path = os.path.join(self.csv_folder_path, file_name)
                 aux_csv_service=CsvFileService(file_path)
                 try:
@@ -53,13 +90,13 @@ class AngleGraphicService:
 
         for camera in self.cameras:
             file_name = camera[1] 
-            camera_name = file_name.split('_')[-4]
+            camera_name = self.camera_name[file_name.split('_')[-4]]
             camera_data = camera[0]
             timestamps = [(datetime.strptime(entry[0], '%Y-%m-%d %H:%M:%S.%f') - datetime.strptime(camera_data[0][0], '%Y-%m-%d %H:%M:%S.%f')).total_seconds() for entry in camera_data]
             angles = [float(entry[1].replace(',', '.')) for entry in camera_data]
             plt.plot(timestamps, angles, label=f"{camera_name}")
 
-        plt.title("Angle Comparison for angle " + self.angle_to_compare + " in experiment " + self.experiment_string)
+        plt.title("Angle Comparison for '" + self.angle_to_compare + "' in experiment '" + self.experiment_name[self.experiment_string] + "'")
         plt.xlabel("Time (seconds)")
         plt.ylabel("Angle (degrees)")
         plt.legend()
