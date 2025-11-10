@@ -1,40 +1,34 @@
-from MainWindow import MainWindow
+"""Main entry point for Multi-Camera Motion Capture System."""
 
-import sys
-from PyQt6.QtWidgets import QApplication, QMainWindow, QLabel
-from PyQt6.QtCore import Qt, QThread, pyqtSignal
-import os
-import tensorflow as tf
-
-
-# Optimize TensorFlow for M1
-os.environ['TF_ENABLE_ONEDNN_OPTS'] = '1'  # Enable oneDNN optimizations
-os.environ['TF_METAL_ENABLED'] = '1'      # Enable Metal GPU acceleration
-
-# Verify TensorFlow and GPU support
-print(f"TensorFlow version: {tf.__version__}")
-print("GPU available:", tf.config.list_physical_devices('GPU'))
+import tkinter as tk
+from Models.MultiCameraExperimentModel import MultiCameraExperimentModel
+from Views.MultiCameraExperimentView import MultiCameraExperimentView
+from Controls.MultiCameraExperimentController import MultiCameraExperimentController
 
 
 def main():
     """Main function to start the application."""
-    # Configure high DPI settings
-    if hasattr(Qt, 'HighDpiScaleFactorRoundingPolicy'):
-        QApplication.setHighDpiScaleFactorRoundingPolicy(
-            Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
-
-    app = QApplication(sys.argv)
-
-    if hasattr(app, 'setDesktopFileName'):
-        app.setDesktopFileName("motion_capture")
-
-    # Set fusion style for better look
-    app.setStyle('Fusion')
     
-    print("Open MainWindow")
-    window = MainWindow();
-
-    sys.exit(app.exec())
+    # Create root window
+    root = tk.Tk()
+    
+    # Create MVC components
+    model = MultiCameraExperimentModel()
+    view = MultiCameraExperimentView(root)
+    controller = MultiCameraExperimentController(view, model)
+    
+    # Handle window close event
+    def on_closing():
+        """Handle application close."""
+        print("Closing application...")
+        controller.cleanup()
+        root.destroy()
+    
+    root.protocol("WM_DELETE_WINDOW", on_closing)
+    
+    # Start main loop
+    print("Starting Multi-Camera Motion Capture System...")
+    root.mainloop()
 
 
 if __name__ == "__main__":
