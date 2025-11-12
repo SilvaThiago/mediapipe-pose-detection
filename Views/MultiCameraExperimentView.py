@@ -44,20 +44,53 @@ class MultiCameraExperimentView:
         self.setup_ui()
     
     def setup_ui(self):
-        """Create the user interface."""
+        """Create the user interface with scrolling."""
+        
+        # Create main canvas with scrollbar
+        main_canvas = tk.Canvas(self.root, bg="white", highlightthickness=0)
+        scrollbar = ttk.Scrollbar(self.root, orient=tk.VERTICAL, command=main_canvas.yview)
+        
+        main_canvas.configure(yscrollcommand=scrollbar.set)
+        
+        # Pack canvas and scrollbar
+        main_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        
+        # Create scrollable frame inside canvas
+        scrollable_frame = ttk.Frame(main_canvas)
+        canvas_window = main_canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
         
         # Configuration Frame
-        self.create_config_frame()
+        self.create_config_frame(scrollable_frame)
         
         # Cameras Frame
-        self.create_cameras_frame()
+        self.create_cameras_frame(scrollable_frame)
         
         # Control Frame
-        self.create_control_frame()
+        self.create_control_frame(scrollable_frame)
+        
+        # Update scroll region when frame size changes
+        def on_frame_configure(event=None):
+            main_canvas.configure(scrollregion=main_canvas.bbox("all"))
+            # Make canvas window width match canvas width
+            if scrollable_frame.winfo_reqwidth() < main_canvas.winfo_width():
+                main_canvas.itemconfig(canvas_window, width=main_canvas.winfo_width())
+        
+        scrollable_frame.bind("<Configure>", on_frame_configure)
+        main_canvas.bind("<Configure>", on_frame_configure)
+        
+        # Enable mousewheel scrolling
+        def _on_mousewheel(event):
+            main_canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+        
+        main_canvas.bind_all("<MouseWheel>", _on_mousewheel)
+        # Para Linux
+        main_canvas.bind_all("<Button-4>", lambda e: main_canvas.yview_scroll(-1, "units"))
+        main_canvas.bind_all("<Button-5>", lambda e: main_canvas.yview_scroll(1, "units"))
     
-    def create_config_frame(self):
+    def create_config_frame(self, parent):
         """Create configuration frame."""
-        config_frame = ttk.LabelFrame(self.root, text="Experiment Configuration", padding=10)
+        config_frame = ttk.LabelFrame(parent, text="Experiment Configuration", padding=10)
         config_frame.pack(fill=tk.X, padx=10, pady=10)
         
         # Experiment name
@@ -85,9 +118,9 @@ class MultiCameraExperimentView:
         
         config_frame.columnconfigure(3, weight=1)
     
-    def create_cameras_frame(self):
+    def create_cameras_frame(self, parent):
         """Create cameras frame."""
-        cameras_frame = ttk.LabelFrame(self.root, text="Cameras", padding=10)
+        cameras_frame = ttk.LabelFrame(parent, text="Cameras", padding=10)
         cameras_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
         
         # Create camera panels
@@ -129,9 +162,9 @@ class MultiCameraExperimentView:
             command=lambda idx=camera_index: self._handle_camera_connect(idx)
         ).pack(padx=5, pady=5)
     
-    def create_control_frame(self):
+    def create_control_frame(self, parent):
         """Create control frame."""
-        control_frame = ttk.LabelFrame(self.root, text="Control", padding=10)
+        control_frame = ttk.LabelFrame(parent, text="Control", padding=10)
         control_frame.pack(fill=tk.X, padx=10, pady=10)
         
         # Init Videos button
